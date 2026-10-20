@@ -186,6 +186,20 @@ class TestModelContract(unittest.TestCase):
         self.assertEqual(len(brief.next_checks), 1)
         self.assertEqual(brief.next_checks[0].event_ids, ("E02",))
 
+    def test_queue_timeout_does_not_support_firewall_advice(self):
+        digest = analyze("worker | WARNING retrying background queue delivery after timeout")
+        result = validate_brief({
+            "overview": "Worker retry observed.",
+            "hypotheses": [],
+            "next_checks": [
+                {"text": "Examine the network firewall rules.", "event_ids": ["E01"]},
+                {"text": "Check the background queue retry rate.", "event_ids": ["E01"]},
+            ],
+            "unknowns": [],
+        }, digest, "gemma3:1b")
+        self.assertEqual([note.text for note in result.next_checks],
+                         ["Check the background queue retry rate."])
+
     def test_bad_response_rejected(self):
         with self.assertRaises(ModelError):
             validate_brief(["not an object"], self.digest, "gemma3:1b")
