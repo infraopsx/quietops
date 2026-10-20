@@ -57,3 +57,29 @@ jobs:
           path: out/handoff.*
           if-no-files-found: error
           retention-days: 14
+      - name: Prepare public demo from genuine Gemma HTML
+        run: |
+          mkdir -p _site
+          cp out/handoff.html _site/index.html
+          cp out/handoff.md _site/handoff.md
+          cp out/handoff.json _site/handoff.json
+          touch _site/.nojekyll
+      - name: Upload GitHub Pages demo artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy-demo:
+    needs: local-gemma
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish genuine Gemma report as public browser demo
+        id: deployment
+        uses: actions/deploy-pages@v4
