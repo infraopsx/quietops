@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "mode": "deterministic-preview",
+  "counts": {
+    "total_lines": 240,
+    "examined_lines": 240,
+    "symptom_lines": 110,
+    "unique_signatures": 5,
+    "redacted_lines": 68
+  },
+  "events": [
+    {
+      "id": "E01",
+      "severity": "error",
+      "count": 32,
+      "first_line": 6,
+      "samples": [
+        "api | 2026-10-20T01:01:15Z ERROR database URL: postgres://[USER]:[REDACTED]@postgres:5432/demo",
+        "api | 2026-10-20T01:02:30Z ERROR database URL: postgres://[USER]:[REDACTED]@postgres:5432/demo"
+      ]
+    },
+    {
+      "id": "E02",
+      "severity": "error",
+      "count": 27,
+      "first_line": 8,
+      "samples": [
+        "worker | 2026-10-20T01:01:45Z WARNING retrying background queue delivery after timeout",
+        "worker | 2026-10-20T01:03:30Z WARNING retrying background queue delivery after timeout"
+      ]
+    },
+    {
+      "id": "E03",
+      "severity": "error",
+      "count": 19,
+      "first_line": 12,
+      "samples": [
+        "api | 2026-10-20T01:02:45Z ERROR connection timeout during database query; password=[REDACTED]",
+        "api | 2026-10-20T01:05:30Z ERROR connection timeout during database query; password=[REDACTED]"
+      ]
+    },
+    {
+      "id": "E04",
+      "severity": "error",
+      "count": 17,
+      "first_line": 14,
+      "samples": [
+        "nginx | 2026-10-20T01:03:15Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: [REDACTED-IP]; status: 502",
+        "nginx | 2026-10-20T01:06:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: [REDACTED-IP]; status: 502"
+      ]
+    },
+    {
+      "id": "E05",
+      "severity": "error",
+      "count": 15,
+      "first_line": 1,
+      "samples": [
+        "postgres | 2026-10-20T01:00:00Z FATAL: password authentication failed for user \"app\"",
+        "postgres | 2026-10-20T01:04:15Z FATAL: password authentication failed for user \"app\""
+      ]
+    }
+  ],
+  "ai": null
+}

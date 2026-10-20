@@ -1,0 +1,240 @@
+postgres | 2026-10-20T01:00:00Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:00:15Z INFO request completed in 14ms
+api | 2026-10-20T01:00:30Z INFO request completed in 14ms
+api | 2026-10-20T01:00:45Z INFO request completed in 14ms
+api | 2026-10-20T01:01:00Z INFO request completed in 14ms
+api | 2026-10-20T01:01:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:01:30Z INFO request completed in 14ms
+worker | 2026-10-20T01:01:45Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:02:00Z INFO request completed in 14ms
+api | 2026-10-20T01:02:15Z INFO request completed in 14ms
+api | 2026-10-20T01:02:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:02:45Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:03:00Z INFO request completed in 14ms
+nginx | 2026-10-20T01:03:15Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.14; status: 502
+worker | 2026-10-20T01:03:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:03:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:04:00Z INFO request completed in 14ms
+postgres | 2026-10-20T01:04:15Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:04:30Z INFO request completed in 14ms
+api | 2026-10-20T01:04:45Z INFO request completed in 14ms
+api | 2026-10-20T01:05:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+worker | 2026-10-20T01:05:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:05:30Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:05:45Z INFO request completed in 14ms
+api | 2026-10-20T01:06:00Z INFO request completed in 14ms
+api | 2026-10-20T01:06:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+nginx | 2026-10-20T01:06:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.27; status: 502
+api | 2026-10-20T01:06:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:07:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:07:15Z INFO request completed in 14ms
+api | 2026-10-20T01:07:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:07:45Z INFO request completed in 14ms
+api | 2026-10-20T01:08:00Z INFO request completed in 14ms
+api | 2026-10-20T01:08:15Z ERROR connection timeout during database query; password=super-secret-demo-value
+postgres | 2026-10-20T01:08:30Z FATAL: password authentication failed for user "app"
+worker | 2026-10-20T01:08:45Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:09:00Z INFO request completed in 14ms
+api | 2026-10-20T01:09:15Z INFO request completed in 14ms
+api | 2026-10-20T01:09:30Z INFO request completed in 14ms
+nginx | 2026-10-20T01:09:45Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.40; status: 502
+api | 2026-10-20T01:10:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:10:15Z INFO request completed in 14ms
+worker | 2026-10-20T01:10:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:10:45Z INFO request completed in 14ms
+api | 2026-10-20T01:11:00Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:11:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:11:30Z INFO request completed in 14ms
+api | 2026-10-20T01:11:45Z INFO request completed in 14ms
+api | 2026-10-20T01:12:00Z INFO request completed in 14ms
+worker | 2026-10-20T01:12:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:12:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+postgres | 2026-10-20T01:12:45Z FATAL: password authentication failed for user "app"
+nginx | 2026-10-20T01:13:00Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.53; status: 502
+api | 2026-10-20T01:13:15Z INFO request completed in 14ms
+api | 2026-10-20T01:13:30Z INFO request completed in 14ms
+api | 2026-10-20T01:13:45Z ERROR connection timeout during database query; password=super-secret-demo-value
+worker | 2026-10-20T01:14:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:14:15Z INFO request completed in 14ms
+api | 2026-10-20T01:14:30Z INFO request completed in 14ms
+api | 2026-10-20T01:14:45Z INFO request completed in 14ms
+api | 2026-10-20T01:15:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:15:15Z INFO request completed in 14ms
+api | 2026-10-20T01:15:30Z INFO request completed in 14ms
+worker | 2026-10-20T01:15:45Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:16:00Z INFO request completed in 14ms
+nginx | 2026-10-20T01:16:15Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.66; status: 502
+api | 2026-10-20T01:16:30Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:16:45Z INFO request completed in 14ms
+postgres | 2026-10-20T01:17:00Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:17:15Z INFO request completed in 14ms
+worker | 2026-10-20T01:17:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:17:45Z INFO request completed in 14ms
+api | 2026-10-20T01:18:00Z INFO request completed in 14ms
+api | 2026-10-20T01:18:15Z INFO request completed in 14ms
+api | 2026-10-20T01:18:30Z INFO request completed in 14ms
+api | 2026-10-20T01:18:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:19:00Z INFO request completed in 14ms
+api | 2026-10-20T01:19:15Z ERROR connection timeout during database query; password=super-secret-demo-value
+nginx | 2026-10-20T01:19:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.79; status: 502
+api | 2026-10-20T01:19:45Z INFO request completed in 14ms
+api | 2026-10-20T01:20:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:20:15Z INFO request completed in 14ms
+api | 2026-10-20T01:20:30Z INFO request completed in 14ms
+api | 2026-10-20T01:20:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:21:00Z WARNING retrying background queue delivery after timeout
+postgres | 2026-10-20T01:21:15Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:21:30Z INFO request completed in 14ms
+api | 2026-10-20T01:21:45Z INFO request completed in 14ms
+api | 2026-10-20T01:22:00Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:22:15Z INFO request completed in 14ms
+api | 2026-10-20T01:22:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+nginx | 2026-10-20T01:22:45Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.92; status: 502
+api | 2026-10-20T01:23:00Z INFO request completed in 14ms
+api | 2026-10-20T01:23:15Z INFO request completed in 14ms
+api | 2026-10-20T01:23:30Z INFO request completed in 14ms
+api | 2026-10-20T01:23:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:24:00Z INFO request completed in 14ms
+api | 2026-10-20T01:24:15Z INFO request completed in 14ms
+worker | 2026-10-20T01:24:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:24:45Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:25:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:25:15Z INFO request completed in 14ms
+postgres | 2026-10-20T01:25:30Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:25:45Z INFO request completed in 14ms
+nginx | 2026-10-20T01:26:00Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.105; status: 502
+worker | 2026-10-20T01:26:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:26:30Z INFO request completed in 14ms
+api | 2026-10-20T01:26:45Z INFO request completed in 14ms
+api | 2026-10-20T01:27:00Z INFO request completed in 14ms
+api | 2026-10-20T01:27:15Z INFO request completed in 14ms
+api | 2026-10-20T01:27:30Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:27:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:28:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:28:15Z INFO request completed in 14ms
+api | 2026-10-20T01:28:30Z INFO request completed in 14ms
+api | 2026-10-20T01:28:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:29:00Z INFO request completed in 14ms
+nginx | 2026-10-20T01:29:15Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.118; status: 502
+api | 2026-10-20T01:29:30Z INFO request completed in 14ms
+postgres | 2026-10-20T01:29:45Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:30:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:30:15Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:30:30Z INFO request completed in 14ms
+api | 2026-10-20T01:30:45Z INFO request completed in 14ms
+api | 2026-10-20T01:31:00Z INFO request completed in 14ms
+api | 2026-10-20T01:31:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+worker | 2026-10-20T01:31:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:31:45Z INFO request completed in 14ms
+api | 2026-10-20T01:32:00Z INFO request completed in 14ms
+api | 2026-10-20T01:32:15Z INFO request completed in 14ms
+nginx | 2026-10-20T01:32:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.131; status: 502
+api | 2026-10-20T01:32:45Z INFO request completed in 14ms
+api | 2026-10-20T01:33:00Z ERROR connection timeout during database query; password=super-secret-demo-value
+worker | 2026-10-20T01:33:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:33:30Z INFO request completed in 14ms
+api | 2026-10-20T01:33:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+postgres | 2026-10-20T01:34:00Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:34:15Z INFO request completed in 14ms
+api | 2026-10-20T01:34:30Z INFO request completed in 14ms
+api | 2026-10-20T01:34:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:35:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:35:15Z INFO request completed in 14ms
+api | 2026-10-20T01:35:30Z INFO request completed in 14ms
+nginx | 2026-10-20T01:35:45Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.144; status: 502
+api | 2026-10-20T01:36:00Z INFO request completed in 14ms
+api | 2026-10-20T01:36:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:36:30Z INFO request completed in 14ms
+worker | 2026-10-20T01:36:45Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:37:00Z INFO request completed in 14ms
+api | 2026-10-20T01:37:15Z INFO request completed in 14ms
+api | 2026-10-20T01:37:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:37:45Z INFO request completed in 14ms
+api | 2026-10-20T01:38:00Z INFO request completed in 14ms
+postgres | 2026-10-20T01:38:15Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:38:30Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:38:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+nginx | 2026-10-20T01:39:00Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.157; status: 502
+api | 2026-10-20T01:39:15Z INFO request completed in 14ms
+api | 2026-10-20T01:39:30Z INFO request completed in 14ms
+api | 2026-10-20T01:39:45Z INFO request completed in 14ms
+api | 2026-10-20T01:40:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+worker | 2026-10-20T01:40:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:40:30Z INFO request completed in 14ms
+api | 2026-10-20T01:40:45Z INFO request completed in 14ms
+api | 2026-10-20T01:41:00Z INFO request completed in 14ms
+api | 2026-10-20T01:41:15Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:41:30Z INFO request completed in 14ms
+api | 2026-10-20T01:41:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:42:00Z WARNING retrying background queue delivery after timeout
+nginx | 2026-10-20T01:42:15Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.170; status: 502
+postgres | 2026-10-20T01:42:30Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:42:45Z INFO request completed in 14ms
+api | 2026-10-20T01:43:00Z INFO request completed in 14ms
+api | 2026-10-20T01:43:15Z INFO request completed in 14ms
+api | 2026-10-20T01:43:30Z INFO request completed in 14ms
+worker | 2026-10-20T01:43:45Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:44:00Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:44:15Z INFO request completed in 14ms
+api | 2026-10-20T01:44:30Z INFO request completed in 14ms
+api | 2026-10-20T01:44:45Z INFO request completed in 14ms
+api | 2026-10-20T01:45:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:45:15Z INFO request completed in 14ms
+nginx | 2026-10-20T01:45:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.183; status: 502
+api | 2026-10-20T01:45:45Z INFO request completed in 14ms
+api | 2026-10-20T01:46:00Z INFO request completed in 14ms
+api | 2026-10-20T01:46:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:46:30Z INFO request completed in 14ms
+postgres | 2026-10-20T01:46:45Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:47:00Z INFO request completed in 14ms
+worker | 2026-10-20T01:47:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:47:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:47:45Z INFO request completed in 14ms
+api | 2026-10-20T01:48:00Z INFO request completed in 14ms
+api | 2026-10-20T01:48:15Z INFO request completed in 14ms
+api | 2026-10-20T01:48:30Z INFO request completed in 14ms
+nginx | 2026-10-20T01:48:45Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.196; status: 502
+worker | 2026-10-20T01:49:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:49:15Z INFO request completed in 14ms
+api | 2026-10-20T01:49:30Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:49:45Z INFO request completed in 14ms
+api | 2026-10-20T01:50:00Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:50:15Z INFO request completed in 14ms
+api | 2026-10-20T01:50:30Z INFO request completed in 14ms
+worker | 2026-10-20T01:50:45Z WARNING retrying background queue delivery after timeout
+postgres | 2026-10-20T01:51:00Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:51:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:51:30Z INFO request completed in 14ms
+api | 2026-10-20T01:51:45Z INFO request completed in 14ms
+nginx | 2026-10-20T01:52:00Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.9; status: 502
+api | 2026-10-20T01:52:15Z ERROR connection timeout during database query; password=super-secret-demo-value
+worker | 2026-10-20T01:52:30Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:52:45Z INFO request completed in 14ms
+api | 2026-10-20T01:53:00Z INFO request completed in 14ms
+api | 2026-10-20T01:53:15Z INFO request completed in 14ms
+api | 2026-10-20T01:53:30Z INFO request completed in 14ms
+api | 2026-10-20T01:53:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:54:00Z INFO request completed in 14ms
+worker | 2026-10-20T01:54:15Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:54:30Z INFO request completed in 14ms
+api | 2026-10-20T01:54:45Z INFO request completed in 14ms
+api | 2026-10-20T01:55:00Z ERROR connection timeout during database query; password=super-secret-demo-value
+postgres | 2026-10-20T01:55:15Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:55:30Z INFO request completed in 14ms
+api | 2026-10-20T01:55:45Z INFO request completed in 14ms
+worker | 2026-10-20T01:56:00Z WARNING retrying background queue delivery after timeout
+api | 2026-10-20T01:56:15Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:56:30Z INFO request completed in 14ms
+api | 2026-10-20T01:56:45Z INFO request completed in 14ms
+api | 2026-10-20T01:57:00Z INFO request completed in 14ms
+api | 2026-10-20T01:57:15Z INFO request completed in 14ms
+api | 2026-10-20T01:57:30Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:57:45Z ERROR connection timeout during database query; password=super-secret-demo-value
+api | 2026-10-20T01:58:00Z INFO request completed in 14ms
+api | 2026-10-20T01:58:15Z INFO request completed in 14ms
+nginx | 2026-10-20T01:58:30Z ERROR connect() failed (111: Connection refused) while connecting to upstream; client: 198.51.100.35; status: 502
+api | 2026-10-20T01:58:45Z ERROR database URL: postgres://demo_user:demo_pw@postgres:5432/demo
+api | 2026-10-20T01:59:00Z INFO request completed in 14ms
+api | 2026-10-20T01:59:15Z INFO request completed in 14ms
+postgres | 2026-10-20T01:59:30Z FATAL: password authentication failed for user "app"
+api | 2026-10-20T01:59:45Z INFO request completed in 14ms

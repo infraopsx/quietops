@@ -1,0 +1,59 @@
+name: Real Gemma inference smoke test
+
+# Runs after the first push to the NEW public QuietOps repository.
+# It uses the actual gemma3:1b weights, not the fake model in unit tests.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-gemma:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Start Ollama locally on the runner
+        run: |
+          docker run -d --rm --name quietops-ollama \
+            -p 127.0.0.1:11434:11434 \
+            ollama/ollama:latest
+          for i in $(seq 1 40); do
+            if curl --silent --fail http://127.0.0.1:11434/api/version; then
+              break
+            fi
+            sleep 3
+          done
+          curl --fail --silent --show-error http://127.0.0.1:11434/api/version
+      - name: Pull real open-weight Gemma 3 1B
+        run: docker exec quietops-ollama ollama pull gemma3:1b
+      - name: Generate a genuine model-backed report
+        run: |
+          python -m quietops scan examples/docker-incident.log \
+            --output-dir out --model gemma3:1b
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('out/handoff.json').read_text())
+          assert report['mode'] == 'local-ai', 'Preview mode is not a real AI demo'
+          assert report['ai']['model'] == 'gemma3:1b'
+          assert report['ai']['overview'], 'Gemma did not return an overview'
+          real_ids = {e['id'] for e in report['events']}
+          for section in ('hypotheses', 'next_checks'):
+              for note in report['ai'][section]:
+                  assert set(note['event_ids']) <= real_ids
+          print('Verified: actual Gemma output, mode, model, cited evidence IDs')
+          PY
+      - name: Upload generated reports for challenge evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: quietops-real-gemma-report
+          path: out/handoff.*
+          if-no-files-found: error
+          retention-days: 14
