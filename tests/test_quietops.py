@@ -122,6 +122,34 @@ class TestModelContract(unittest.TestCase):
         }, self.digest, "gemma3:1b")
         self.assertIn("not established", result.unknowns[0])
 
+    def test_cross_service_and_auth_misattributions_are_dropped(self):
+        fixture = (
+            "worker | WARNING retrying background queue after timeout\n"
+            "api | ERROR connection timeout during database query; password=sample\n"
+            "postgres | FATAL password authentication failed for user app"
+        )
+        digest = analyze(fixture)
+        result = validate_brief({
+            "overview": "Several independent symptoms occurred.",
+            "hypotheses": [
+                {"text": "The database is down.", "event_ids": ["E01"]},
+                {"text": "Incorrect database credentials.", "event_ids": ["E02"]},
+                {"text": "The database URL is invalid.", "event_ids": ["E02"]},
+                {"text": "Database credentials could be incorrect.", "event_ids": ["E03"]},
+            ],
+            "next_checks": [
+                {"text": "Verify the database password in the logs.", "event_ids": ["E03"]},
+                {"text": "Review the queue retry rate.", "event_ids": ["E01"]},
+            ],
+            "unknowns": ["Whether the database is reachable is not established."],
+        }, digest, "gemma3:1b")
+        self.assertEqual([n.text for n in result.hypotheses], [
+            "Database credentials could be incorrect.",
+        ])
+        self.assertEqual([n.text for n in result.next_checks], [
+            "Review the queue retry rate.",
+        ])
+
     def test_bad_response_rejected(self):
         with self.assertRaises(ModelError):
             validate_brief(["not an object"], self.digest, "gemma3:1b")
