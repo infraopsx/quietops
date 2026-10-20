@@ -11,48 +11,46 @@ The workflow is intentionally simple:
 1. Scan the file for errors and warnings, with explicit limits on input size and line count.
 2. Remove common secrets, IP addresses and email addresses on a best-effort basis; group repetitive messages and assign evidence IDs such as E01–E05.
 3. Send only a small set of redacted examples to a loopback-only Ollama endpoint.
-4. Ask the local model for an overview, possible explanations and read-only follow-up checks.
-5. Validate the JSON structure and discard notes that reference non-existent evidence IDs.
-6. Create Markdown, JSON and a standalone HTML handoff.
+4. Ask the local model for potential explanations and read-only checks, while keeping the visible factual overview separate from model prose.
+5. Validate JSON, reject non-existent IDs and some obviously unrelated event-to-claim citations. These conservative checks do not prove a suggestion correct.
+6. Create Markdown, JSON and a standalone HTML handoff that distinguishes observations from hypotheses.
 
 This is **not an auto-remediation agent**. It cannot connect to a production server, execute shell commands, edit configuration or restart containers. The human operator remains in control.
 
 ## Demo
 
-**New repository:** [infraopsx/quietops](https://github.com/infraopsx/quietops)
+**[Open the live QuietOps report](https://infraopsx.github.io/quietops/)** · **[Source code](https://github.com/infraopsx/quietops)** · **[Real-Gemma CI and deployment runs](https://github.com/infraopsx/quietops/actions/workflows/live-gemma.yml)**
 
-**Verified real-Gemma run:** [GitHub Actions: Real Gemma inference smoke test — successful](https://github.com/infraopsx/quietops/actions/runs/39359492617)
+The browser demo is a **static HTML report produced by real Gemma 3 1B inference** in GitHub Actions, not a mockup or a public model API. The Actions runner starts local Ollama, downloads Gemma's actual weights, analyzes the repository's synthetic fixture and publishes the resulting handoff. Visitors can inspect the [generated JSON](https://infraopsx.github.io/quietops/handoff.json) and [Markdown](https://infraopsx.github.io/quietops/handoff.md) without creating an account. The app does not accept log uploads on this public page.
 
-**Actual model-generated reports:** Read the [public real-Gemma audit and verbatim excerpts](https://github.com/infraopsx/quietops/blob/main/demo/real-gemma-audit.md) or open the successful workflow run and download its **quietops-real-gemma-report** artifact (HTML, Markdown, JSON). The repository also has a [deterministic preview](https://github.com/infraopsx/quietops/blob/main/demo/handoff.md), explicitly labeled **AI not run**. These are different artifacts; I did not pass the preview off as an AI result.
+I also kept a separate [deterministic, no-model preview](https://github.com/infraopsx/quietops/blob/main/demo/handoff.md), explicitly labeled **AI not run**. It is not the live Gemma demonstration.
 
-Try the deterministic preview with no AI setup:
+The synthetic fixture contains 240 Docker-style lines. QuietOps finds 110 warning/error lines and groups them into these five signatures:
+
+| Event | What the excerpt actually shows | Occurrences |
+|---|---|---:|
+| E01 | API logs a PostgreSQL connection URL (not proof that the URL is wrong) | 32 |
+| E02 | Worker retries queue delivery after a timeout (**WARNING**) | 27 |
+| E03 | API database query timeout | 19 |
+| E04 | Nginx upstream connection refused | 17 |
+| E05 | PostgreSQL password authentication failure for the app user | 15 |
+
+Five initial review items instead of 240 log lines is a **97.9% reduction in items to scan**, *not* a measured 97.9% saving of an operator's time. Nor does it establish an accurate root-cause diagnosis.
+
+To run the deterministic grouping without any model:
 
 ~~~bash
 python3 examples/make_demo.py
 python3 -m quietops preview examples/docker-incident.log --output-dir out/
 ~~~
 
-For a real model-backed run after installing Ollama:
+To reproduce actual AI-assisted output locally after installing Ollama:
 
 ~~~bash
 ollama pull gemma3:1b
 # Make sure the local Ollama service is running.
 python3 -m quietops scan examples/docker-incident.log --model gemma3:1b --output-dir out/
 ~~~
-
-The example is synthetic. It contains 240 Docker-style lines covering a database authentication error, query timeouts, worker queue retries, and an Nginx upstream returning 502. There are **no real customer logs** in the repository or public CI.
-
-Here is the reproducible first-pass result:
-
-| Measure | Value |
-|---|---:|
-| Raw log lines | 240 |
-| Error/warning lines | 110 |
-| Grouped signatures | 5 |
-| Redaction/ANSI-cleanup affected lines | 68 |
-| Initial review entries (240 → 5) | 97.9% fewer |
-
-**That 97.9% measures reading items, not time saved or diagnostic accuracy.** It would take an operator study to claim a productivity gain.
 
 ## Code
 
@@ -67,27 +65,34 @@ input log
   → E01–E05 evidence IDs
   → Ollama API on 127.0.0.1
   → Gemma 3 1B JSON response
-  → ID and structure validation
+  → schema + conservative event-reference checks
+  → deterministic factual overview + unverified Gemma suggestions
   → self-contained HTML + Markdown + JSON
 ~~~
 
 There is no signup, managed cloud database, background collector, hosted model or remote log upload. The network request is restricted to localhost, with HTTP proxies disabled for it. The parser checks the size before reading the entire file and does not process unbounded streams.
 
-The project includes **14 automated tests**, including a fake local Ollama HTTP server, redaction tests and tests that reject invented evidence IDs. A separate GitHub Actions workflow downloads the *actual* Gemma model and verifies a real model-generated artifact. These are deliberately separate levels of evidence.
+The project includes automated regression tests: a simulated local Ollama server, secret redaction, explicit WARNING handling, invented evidence IDs, and claims that cite unrelated log events. A separate GitHub Actions workflow downloads the **actual Gemma weights** and verifies a real model-generated artifact. These are deliberately separate levels of evidence; green tests do not prove a diagnosis is correct.
 
 ## How I Built It
 
-I started from a real operational annoyance rather than a dashboard: an incident handoff should explain the most common failure signatures without replacing the operator's judgment.
+I started with a mundane handoff problem: the same few errors flood an incident log, but the next shift still has to scroll through every repetition.
 
-The first version passed the fake-Ollama tests but **failed with the real model**. Gemma did not produce a JSON object that the program could parse. This was a useful failure: passing an HTTP integration test is not the same thing as passing inference in production.
+I used the Python standard library for bounded parsing, normalization, grouping, redaction and report generation. The model gets a small set of redacted event excerpts over Ollama on 127.0.0.1, not the unfiltered log stream. The default first pass examines up to 8,000 lines or 2 MB and sends at most 12 event groups with two excerpts each; **8,000 is an engineering limit, not a measured Gemma quality threshold**.
 
-I changed the request to use Ollama's documented **JSON Schema structured-output mode** instead of loosely requesting JSON text. I also bounded the generation context and token count, and added tests to prevent the request contract from silently regressing. The [next real-model CI run passed](https://github.com/infraopsx/quietops/actions/runs/39359492617).
+My first tests used a fake Ollama HTTP server. They passed, but the **first actual Gemma run failed** because the response wasn't valid JSON. Requiring Ollama JSON Schema structured output fixed the integration, as confirmed by this [real-model CI run](https://github.com/infraopsx/quietops/actions/runs/39359492617).
 
-The important lesson was not that the small model became infallible. It was that **model integration needs its own acceptance test**.
+A subtler failure showed up once the browser demo was public. Gemma sometimes attached a *real* evidence ID to a statement the underlying log did not support. For example, a worker queue retry was treated as evidence of a database outage. I also discovered that keyword detection was labeling a WARNING about a timeout as ERROR.
 
-And there is another limitation worth showing honestly: even in a schema-valid report, the model can associate an existing evidence ID with an explanation that the underlying log does not prove. In the real output, for example, one suggested database-related cause referenced a worker queue retry group. The ID was real, but the causal inference was **not validated**. QuietOps checks *reference existence*, not semantic entailment.
+That led to three concrete changes:
 
-That is why every finding stays labeled as a hypothesis and every suggested command must be reviewed by a human. The tool's current safety boundary is narrower than automated root-cause analysis.
+1. Explicit log levels take precedence over severity keywords such as "timeout".
+2. The visible **observed-log overview comes from deterministic counts and service labels**, not unchecked model prose.
+3. Model-generated hypotheses and read-only checks must cite existing events and pass conservative, event-by-event topical checks. Unrelated-service suggestions can be dropped.
+
+These checks are intentionally modest. They **do not verify causal reasoning**. A note citing E05 for a suspected credential mismatch is a hypothesis worth checking, not a proven diagnosis. A model can still be wrong, even if every event ID exists.
+
+There is a further trade-off I haven't benchmarked yet: choosing the 12 most frequent signatures might omit a rare but critical failure. I would rather document that limitation than pretend a first-pass handoff is full incident analysis.
 
 ## Why Does Open Innovation Matter?
 
@@ -99,7 +104,7 @@ QuietOps's own code is MIT-licensed. **Gemma model weights have their own Google
 
 ## The Lazy Payoff
 
-Instead of requiring a tired operator to scroll 240 synthetic lines to find five recurring patterns, QuietOps turns the first pass into **five reviewable groups**, supplemented by an optional local-AI briefing.
+Instead of requiring a tired operator to scroll 240 synthetic lines to find five recurring patterns, QuietOps turns the first pass into **five reviewable groups**, with optional local-Gemma suggestions clearly separated from observations.
 
 It is a small, reproducible convenience, not an AI that claims to fix outages. The best possible result is that the next person can **start asking better questions sooner**—and can see exactly where the model might be wrong.
 
