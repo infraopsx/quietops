@@ -64,32 +64,32 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
     claim = text.lower()
     evidence = " ".join(sample for event in events for sample in event.samples).lower()
     topic_rules = (
-        (r"\\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\\b",
-         r"\\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\\b"),
-        (r"\\b(queue|worker|background job)\\b",
-         r"\\b(queue|worker|background job)\\b"),
-        (r"\\b(nginx|reverse proxy|upstream)\\b",
-         r"\\b(nginx|reverse proxy|upstream)\\b"),
+        (r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b",
+         r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b"),
+        (r"\b(queue|worker|background job)\b",
+         r"\b(queue|worker|background job)\b"),
+        (r"\b(nginx|reverse proxy|upstream)\b",
+         r"\b(nginx|reverse proxy|upstream)\b"),
     )
     for claim_pattern, evidence_pattern in topic_rules:
         if re.search(claim_pattern, claim) and not re.search(evidence_pattern, evidence):
             return False
 
-    if re.search(r"\\b(credentials?|authentication|permissions?|password|privileges?|login)\\b", claim):
+    if re.search(r"\b(credentials?|authentication|permissions?|password|privileges?|login)\b", claim):
         # A password= field in a query-timeout log is NOT proof of an auth issue.
         if not re.search(
-            r"\\b(authentication failed|login failed|permission denied|"
+            r"\b(authentication failed|login failed|permission denied|"
             r"access denied|invalid credentials|wrong password|password rejected|"
-            r"unauthorized|forbidden)\\b", evidence
+            r"unauthorized|forbidden)\b", evidence
         ):
             return False
         # Never encourage examining actual passwords in log files.
-        if re.search(r"\\b(logs?|traces?)\\b", claim) and re.search(r"\\b(password|credentials?)\\b", claim):
+        if re.search(r"\b(logs?|traces?)\b", claim) and re.search(r"\b(password|credentials?)\b", claim):
             return False
 
-    if (re.search(r"\\b(url|uri|dsn|connection string)\\b", claim)
-            and re.search(r"\\b(invalid|incorrect|wrong|malformed|misconfigured)\\b", claim)
-            and not re.search(r"\\b(invalid|incorrect|wrong|malformed|misconfigured|parse error)\\b", evidence)):
+    if (re.search(r"\b(url|uri|dsn|connection string)\b", claim)
+            and re.search(r"\b(invalid|incorrect|wrong|malformed|misconfigured)\b", claim)
+            and not re.search(r"\b(invalid|incorrect|wrong|malformed|misconfigured|parse error)\b", evidence)):
         return False
     return True
 
