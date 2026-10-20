@@ -64,20 +64,20 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
     claim = text.lower()
     evidence = " ".join(sample for event in events for sample in event.samples).lower()
     # Correlation across different services cannot be established by one log group.
-    if re.search(r"\\b(multiple services|across services|system-wide|all services)\\b", claim):
+    if re.search(r"\b(multiple services|across services|system-wide|all services)\b", claim):
         return False
     # Simply logging a database URL does not prove a connection failure.
-    if re.search(r"\\b(connection failures?|connection issues?|database outages?)\\b", claim):
+    if re.search(r"\b(connection failures?|connection issues?|database outages?)\b", claim):
         if not re.search(
-            r"\\b(timed? out|timeout|connection refused|connect\\(\\) failed|"
-            r"connection failed|authentication failed|could not connect|unreachable)\\b",
+            r"\b(timed? out|timeout|connection refused|connect\(\) failed|"
+            r"connection failed|authentication failed|could not connect|unreachable)\b",
             evidence,
         ):
             return False
     # Credential failures and refused upstream connections do not prove DB network faults.
-    if re.search(r"\\b(network connectivity|network issue|network failure|routing issue)\\b", claim):
-        if not re.search(r"\\b(no route|network unreachable|network is unreachable|"
-                         r"host unreachable|dns failure|network timeout)\\b", evidence):
+    if re.search(r"\b(network connectivity|network issue|network failure|routing issue)\b", claim):
+        if not re.search(r"\b(no route|network unreachable|network is unreachable|"
+                         r"host unreachable|dns failure|network timeout)\b", evidence):
             return False
     topic_rules = (
         (r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b",
@@ -116,7 +116,7 @@ def _observed_overview(digest: Digest) -> str:
     for event in digest.events:
         if not event.samples:
             continue
-        found = re.match(r"\\s*([\\w.-]{1,50})\\s*\\|", event.samples[0])
+        found = re.match(r"\s*([\w.-]{1,50})\s*\|", event.samples[0])
         if found:
             services.add(found.group(1))
     base = (
