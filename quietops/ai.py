@@ -63,6 +63,22 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
         return False
     claim = text.lower()
     evidence = " ".join(sample for event in events for sample in event.samples).lower()
+    # Correlation across different services cannot be established by one log group.
+    if re.search(r"\b(multiple services|across services|system-wide|all services)\b", claim):
+        return False
+    # Simply logging a database URL does not prove a connection failure.
+    if re.search(r"\b(connection failures?|connection issues?|database outages?)\b", claim):
+        if not re.search(
+            r"\b(timed? out|timeout|connection refused|connect\(\) failed|"
+            r"connection failed|authentication failed|could not connect|unreachable)\b",
+            evidence,
+        ):
+            return False
+    # Credential failures and refused upstream connections do not prove DB network faults.
+    if re.search(r"\b(network connectivity|network issue|network failure|routing issue)\b", claim):
+        if not re.search(r"\b(no route|network unreachable|network is unreachable|"
+                         r"host unreachable|dns failure|network timeout)\b", evidence):
+            return False
     topic_rules = (
         (r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b",
          r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b"),
@@ -94,14 +110,36 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
     return True
 
 
+def _observed_overview(digest: Digest) -> str:
+    """Only deterministic, directly observable facts belong in the lead summary."""
+    services: set[str] = set()
+    for event in digest.events:
+        if not event.samples:
+            continue
+        found = re.match(r"\s*([\w.-]{1,50})\s*\|", event.samples[0])
+        if found:
+            services.add(found.group(1))
+    base = (
+        f"QuietOps examined {digest.examined_lines} log lines, found "
+        f"{digest.symptom_lines} warning/error lines and grouped them into "
+        f"{digest.unique_events} distinct symptom signatures."
+    )
+    if services:
+        base += " Service labels in selected excerpts: " + ", ".join(sorted(services)) + "."
+    return base + " These are observations, not proof of a shared root cause."
+
+
 def validate_brief(candidate: object, digest: Digest, model_name: str) -> Brief:
     if not isinstance(candidate, dict):
         raise ModelError("Model output is not a JSON object")
     by_id = {event.id: event for event in digest.events}
     valid = set(by_id)
-    overview = _safe_text(candidate.get("overview"), limit=700)
-    if not overview:
+    model_overview = _safe_text(candidate.get("overview"), limit=700)
+    if not model_overview:
         raise ModelError("Model output missing overview")
+    # The model can invent relations between unrelated log events in free prose.
+    # Keep the visible lead strictly factual while retaining validated AI notes.
+    overview = _observed_overview(digest)
 
     def notes(key: str) -> tuple[Note, ...]:
         raw = candidate.get(key, [])
@@ -117,7 +155,9 @@ def validate_brief(candidate: object, digest: Digest, model_name: str) -> Brief:
                 continue
             evidence = tuple(dict.fromkeys(i for i in ids if isinstance(i, str) and i in valid))
             # Existence of an ID is checked, NOT whether the citation supports the claim.
-            if text and evidence and _plausibly_supported(text, tuple(by_id[i] for i in evidence)):
+            # Every cited ID must independently be relevant. Mixing two unrelated
+            # services is not evidence for a claimed shared cause.
+            if text and evidence and all(_plausibly_supported(text, (by_id[i],)) for i in evidence):
                 result.append(Note(text=text, event_ids=evidence))
         return tuple(result)
 

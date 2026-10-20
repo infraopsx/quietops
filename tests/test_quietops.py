@@ -150,6 +150,42 @@ class TestModelContract(unittest.TestCase):
             "Review the queue retry rate.",
         ])
 
+    def test_factual_overview_does_not_republish_model_speculation(self):
+        brief = validate_brief({
+            "overview": "All five services are down because the DB is broken.",
+            "hypotheses": [],
+            "next_checks": [],
+            "unknowns": [],
+        }, self.digest, "gemma3:1b")
+        self.assertNotIn("All five services", brief.overview)
+        self.assertIn("2 log lines", brief.overview)
+        self.assertIn("not proof of a shared root cause", brief.overview)
+        self.assertIn("Observed log summary (deterministic", make_html(self.digest, brief))
+
+    def test_each_cited_event_must_support_the_whole_suggestion(self):
+        data = "\n".join((
+            "api | ERROR database URL: postgres://user:secret@postgres:5432/demo",
+            "worker | WARNING retrying background queue after timeout",
+            "nginx | ERROR connect() failed while connecting to upstream",
+            'postgres | FATAL password authentication failed for user "app"',
+        ))
+        digest = analyze(data)
+        brief = validate_brief({
+            "overview": "AI-generated unfounded narrative",
+            "hypotheses": [
+                {"text": "Database connection failures across multiple services.", "event_ids": ["E01"]},
+                {"text": "The database is down.", "event_ids": ["E02"]},
+                {"text": "Network connectivity is contributing to database failures.", "event_ids": ["E03", "E04"]},
+                {"text": "The database user may have invalid credentials.", "event_ids": ["E04"]},
+            ],
+            "next_checks": [{"text": "Review background queue retry rate.", "event_ids": ["E02"]}],
+            "unknowns": ["Whether the network is reachable is unclear."],
+        }, digest, "gemma3:1b")
+        self.assertEqual(len(brief.hypotheses), 1)
+        self.assertEqual(brief.hypotheses[0].event_ids, ("E04",))
+        self.assertEqual(len(brief.next_checks), 1)
+        self.assertEqual(brief.next_checks[0].event_ids, ("E02",))
+
     def test_bad_response_rejected(self):
         with self.assertRaises(ModelError):
             validate_brief(["not an object"], self.digest, "gemma3:1b")
