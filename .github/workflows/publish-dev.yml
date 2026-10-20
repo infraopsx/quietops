@@ -1,0 +1,41 @@
+name: Submit DEV Hacktoberfest Week 3 entry
+
+# Never runs on pull_request. Publishing requires the repository owner to add
+# DEVTO_API_KEY to the repository's encrypted Actions secrets.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-dev.yml'
+      - 'scripts/publish_to_dev.py'
+      - 'submissions/dev-week3.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-week3-submission
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate complete English competition article
+        run: python3 scripts/publish_to_dev.py --dry-run
+      - name: Publish on DEV (idempotent; requires secret)
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+        run: |
+          if [ -z "$DEVTO_API_KEY" ]; then
+            echo "::warning::DEVTO_API_KEY is missing. NO article was submitted."
+            echo "DEV article NOT submitted: add DEVTO_API_KEY, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 scripts/publish_to_dev.py
