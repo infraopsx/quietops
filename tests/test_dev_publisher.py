@@ -23,47 +23,76 @@ class TestPublisher(unittest.TestCase):
         ))
         self.assertFalse(publisher._has_challenge_tags({"tag_list": ["python"]}))
 
-    def test_published_article_is_not_posted_twice(self):
-        article = {
+    def _published(self):
+        return {
             "id": 123, "title": publisher.ARTICLE_TITLE,
             "url": "https://dev.to/infraopsx/quietops-example-abc",
             "published_at": "2026-10-20T02:49:34Z",
-            "tag_list": ["devchallenge", "hf26challenge"],
+            "tag_list": ["devchallenge", "hf26challenge", "opensource", "python"],
         }
+
+    def test_published_article_same_body_is_not_modified(self):
+        article = self._published()
         with patch.object(publisher, "find_existing", return_value=article):
-            with patch.object(publisher, "api_call") as api:
+            with patch.object(publisher, "api_call", return_value={"body_markdown": "body"}) as api:
                 self.assertEqual(publisher.publish("fake-key", "body"), article["url"])
-                api.assert_not_called()
+                api.assert_called_once_with("/articles/123", "fake-key")
+
+    def test_existing_published_article_is_updated_in_place_when_body_changes(self):
+        article = self._published()
+        with patch.object(publisher, "find_existing", side_effect=[article, article]):
+            with patch.object(publisher, "api_call", side_effect=[
+                {"body_markdown": "outdated article"},
+                {"id": 123},
+                {"body_markdown": "body with live link"},
+            ]) as api:
+                self.assertEqual(publisher.publish("fake-key", "body with live link"), article["url"])
+                self.assertEqual(api.call_count, 3)
+                self.assertEqual(api.call_args_list[1].args[0], "/articles/123")
+                self.assertEqual(api.call_args_list[1].kwargs["method"], "PUT")
+                self.assertEqual(api.call_args_list[1].kwargs["payload"]["article"]["body_markdown"], "body with live link")
 
     def test_existing_draft_is_updated_with_correct_tags(self):
         draft = {"id": 123, "title": publisher.ARTICLE_TITLE, "published_at": None}
-        published = {
-            **draft, "published_at": "2026-10-20T02:49:34Z",
-            "url": "https://dev.to/infraopsx/quietops-example-abc",
-            "tag_list": ["devchallenge", "hf26challenge", "opensource", "python"],
-        }
+        published = self._published()
         with patch.object(publisher, "find_existing", side_effect=[draft, published]):
-            with patch.object(publisher, "api_call", return_value={"id": 123}) as api:
+            with patch.object(publisher, "api_call", side_effect=[
+                {"id": 123}, {"body_markdown": "body"},
+            ]) as api:
                 self.assertEqual(publisher.publish("fake-key", "body"), published["url"])
-                args, kwargs = api.call_args
-                self.assertEqual(args[0], "/articles/123")
-                self.assertEqual(kwargs["method"], "PUT")
-                fields = kwargs["payload"]["article"]
+                self.assertEqual(api.call_args_list[0].args[0], "/articles/123")
+                self.assertEqual(api.call_args_list[0].kwargs["method"], "PUT")
+                fields = api.call_args_list[0].kwargs["payload"]["article"]
                 self.assertIs(fields["published"], True)
                 self.assertEqual(fields["tags"], "devchallenge, hf26challenge, opensource, python")
 
-    def test_create_verifies_publication_without_published_field(self):
-        new = {
-            "id": 123, "title": publisher.ARTICLE_TITLE,
-            "published_at": "2026-10-20T02:49:34Z",
-            "tag_list": ["devchallenge", "hf26challenge"],
-            "url": "https://dev.to/infraopsx/quietops-example-abc",
-        }
-        with patch.object(publisher, "find_existing", side_effect=[None, new]):
+    def test_create_verifies_publication_without_published_boolean(self):
+        article = self._published()
+        with patch.object(publisher, "find_existing", side_effect=[None, article]):
+            with patch.object(publisher, "api_call", side_effect=[
+                {"id": 123}, {"body_markdown": "body"},
+            ]) as api:
+                self.assertEqual(publisher.publish("fake-key", "body"), article["url"])
+                self.assertEqual(api.call_args_list[0].args[0], "/articles")
+                self.assertEqual(api.call_args_list[0].kwargs["method"], "POST")
+
+    def test_remote_body_mismatch_fails_after_update(self):
+        article = self._published()
+        with patch.object(publisher, "find_existing", side_effect=[article, article]):
+            with patch.object(publisher, "api_call", side_effect=[
+                {"body_markdown": "old"}, {"id": 123}, {"body_markdown": "still old"}
+            ]):
+                with self.assertRaisesRegex(RuntimeError, "body does not match"):
+                    publisher.publish("fake-key", "new body")
+
+    def test_missing_remote_article_body_stops_without_duplicate(self):
+        article = self._published()
+        with patch.object(publisher, "find_existing", return_value=article):
             with patch.object(publisher, "api_call", return_value={"id": 123}) as api:
-                self.assertEqual(publisher.publish("fake-key", "body"), new["url"])
-                self.assertEqual(api.call_args.args[0], "/articles")
-                self.assertEqual(api.call_args.kwargs["method"], "POST")
+                with self.assertRaisesRegex(RuntimeError, "body_markdown"):
+                    publisher.publish("fake-key", "new body")
+                api.assert_called_once()
+
 
 
 if __name__ == "__main__":
