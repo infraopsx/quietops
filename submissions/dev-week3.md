@@ -23,7 +23,7 @@ This is **not an auto-remediation agent**. It cannot connect to a production ser
 
 **Verified real-Gemma run:** [GitHub Actions: Real Gemma inference smoke test — successful](https://github.com/infraopsx/quietops/actions/runs/39359492617)
 
-**Actual model-generated reports:** Open the successful workflow run and download the **quietops-real-gemma-report** artifact (HTML, Markdown, JSON). The repository also has a [deterministic preview](https://github.com/infraopsx/quietops/blob/main/demo/handoff.md), explicitly labeled **AI not run**. These are different artifacts; I did not pass the preview off as an AI result.
+**Actual model-generated reports:** Read the [public real-Gemma audit and verbatim excerpts](https://github.com/infraopsx/quietops/blob/main/demo/real-gemma-audit.md) or open the successful workflow run and download its **quietops-real-gemma-report** artifact (HTML, Markdown, JSON). The repository also has a [deterministic preview](https://github.com/infraopsx/quietops/blob/main/demo/handoff.md), explicitly labeled **AI not run**. These are different artifacts; I did not pass the preview off as an AI result.
 
 Try the deterministic preview with no AI setup:
 
