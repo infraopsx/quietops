@@ -124,8 +124,8 @@ class TestModelContract(unittest.TestCase):
 
     def test_cross_service_and_auth_misattributions_are_dropped(self):
         fixture = (
-            "worker | WARNING retrying background queue after timeout\\n"
-            "api | ERROR connection timeout during database query; password=sample\\n"
+            "worker | WARNING retrying background queue after timeout\n"
+            "api | ERROR connection timeout during database query; password=sample\n"
             "postgres | FATAL password authentication failed for user app"
         )
         digest = analyze(fixture)
