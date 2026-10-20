@@ -78,36 +78,85 @@ def find_existing(key: str) -> dict | None:
     return None
 
 
+def _is_published(article: dict) -> bool:
+    # Forem's public article serializer usually omits "published" and exposes
+    # "published_at" instead. A missing boolean is NOT evidence of a draft.
+    return (
+        article.get("published") is True
+        or bool(article.get("published_at"))
+        or bool(article.get("published_timestamp"))
+    )
+
+
+def _article_tags(article: dict) -> set[str]:
+    tags = article.get("tag_list")
+    if isinstance(tags, list):
+        return {tag.strip().lower() for tag in tags if isinstance(tag, str)}
+    raw = article.get("tags", "")
+    return {tag.strip().lower() for tag in raw.split(",")} if isinstance(raw, str) else set()
+
+
+def _has_challenge_tags(article: dict) -> bool:
+    return {"devchallenge", "hf26challenge"}.issubset(_article_tags(article))
+
+
+def _published_url(article: dict) -> str:
+    url = article.get("url", "")
+    if not isinstance(url, str) or not url.startswith("https://dev.to/"):
+        raise RuntimeError("Published article has no trustworthy DEV URL")
+    return url
+
+
 def publish(key: str, body: str) -> str:
     existing = find_existing(key)
-    if existing and existing.get("published"):
-        link = str(existing.get("url", ""))
-        if not link.startswith("https://dev.to/"):
-            raise RuntimeError("Existing published DEV article did not return a valid URL")
-        print(f"Already published; no duplicate created: {link}")
+    if existing and _is_published(existing) and _has_challenge_tags(existing):
+        link = _published_url(existing)
+        print(f"Already published with both required tags; no duplicate created: {link}")
         return link
 
+    # The DEV/Forem API requires tags to be a comma-separated *string*.
+    # An array can be accepted without applying its intended tags.
     fields = {
         "title": ARTICLE_TITLE,
         "body_markdown": body,
-        "tags": TAGS,
+        "tags": ", ".join(TAGS),
         "published": True,
     }
     if existing:
         article_id = existing.get("id")
         if not isinstance(article_id, int):
-            raise RuntimeError("Existing draft lacks a valid article ID")
+            raise RuntimeError("Existing DEV entry has no valid article ID; stopped to avoid duplicates")
         response = api_call(f"/articles/{article_id}", key, method="PUT", payload={"article": fields})
+        operation = "Updated existing"
     else:
         response = api_call("/articles", key, method="POST", payload={"article": fields})
+        operation = "Created"
 
-    if not isinstance(response, dict) or not response.get("published"):
-        raise RuntimeError("DEV did not confirm a published article")
-    link = response.get("url", "")
-    if not isinstance(link, str) or not link.startswith("https://dev.to/"):
-        raise RuntimeError("DEV did not provide a valid published-article URL")
-    print(f"Published DEV challenge entry: {link}")
-    return link
+    if not isinstance(response, dict):
+        raise RuntimeError("DEV returned an unexpected article object")
+
+    # Re-read the authenticated account to independently verify publication.
+    # DEV responses can contain published_at but omit published entirely.
+    verified = find_existing(key)
+    if verified and _is_published(verified) and _has_challenge_tags(verified):
+        link = _published_url(verified)
+        print(f"{operation} and verified published DEV challenge article: {link}")
+        return link
+
+    if _is_published(response) and _has_challenge_tags(response):
+        link = _published_url(response)
+        print(f"{operation} and verified published DEV challenge article: {link}")
+        return link
+
+    article_id = response.get("id", existing.get("id") if existing else None)
+    has_pubdate = bool(response.get("published_at"))
+    returned_tags = sorted(_article_tags(response))
+    print(
+        f"DEV returned article ID={article_id}, published_at_present={has_pubdate}, "
+        f"tags={returned_tags}. No duplicate will be created on a later run.",
+        file=sys.stderr,
+    )
+    raise RuntimeError("Article exists on DEV but publication and required challenge tags are not confirmed; check https://dev.to/dashboard")
 
 
 def main() -> int:
