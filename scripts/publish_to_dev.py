@@ -34,8 +34,10 @@ def article_body() -> str:
     missing = [heading for heading in REQUIRED_SECTIONS if heading not in body]
     if missing:
         raise ValueError(f"Missing required challenge sections: {missing}")
-    if "39359492617" not in body:
-        raise ValueError("Successful real-Gemma proof link is missing")
+    if "https://infraopsx.github.io/quietops/" not in body:
+        raise ValueError("Public model-backed browser demo link is missing")
+    if "https://github.com/infraopsx/quietops/actions/workflows/live-gemma.yml" not in body:
+        raise ValueError("Real-Gemma workflow proof link is missing")
     if "TODO" in body:
         raise ValueError("Unresolved TODO in published entry")
     return body
@@ -107,15 +109,29 @@ def _published_url(article: dict) -> str:
     return url
 
 
+def _get_remote_body(key: str, article_id: int) -> str:
+    """Read the actual published Markdown; never infer sync from tags alone."""
+    remote = api_call(f"/articles/{article_id}", key)
+    if not isinstance(remote, dict) or not isinstance(remote.get("body_markdown"), str):
+        raise RuntimeError("DEV did not return readable body_markdown; stopped instead of guessing")
+    return remote["body_markdown"].strip()
+
+
 def publish(key: str, body: str) -> str:
     existing = find_existing(key)
-    if existing and _is_published(existing) and _has_challenge_tags(existing):
-        link = _published_url(existing)
-        print(f"Already published with both required tags; no duplicate created: {link}")
-        return link
+    article_id = existing.get("id") if existing else None
+    if existing and not isinstance(article_id, int):
+        raise RuntimeError("Existing DEV entry has no valid article ID; stopped to avoid duplicates")
 
-    # The DEV/Forem API requires tags to be a comma-separated *string*.
-    # An array can be accepted without applying its intended tags.
+    # Re-read the article body before deciding whether an update is needed.
+    # Previously this function skipped all updates once the tags were correct.
+    if existing and _is_published(existing) and _has_challenge_tags(existing):
+        if _get_remote_body(key, article_id) == body.strip():
+            link = _published_url(existing)
+            print(f"Already published and article body matches repository: {link}")
+            return link
+
+    # DEV/Forem tags are a comma-separated string, NOT a JSON array.
     fields = {
         "title": ARTICLE_TITLE,
         "body_markdown": body,
@@ -123,9 +139,6 @@ def publish(key: str, body: str) -> str:
         "published": True,
     }
     if existing:
-        article_id = existing.get("id")
-        if not isinstance(article_id, int):
-            raise RuntimeError("Existing DEV entry has no valid article ID; stopped to avoid duplicates")
         response = api_call(f"/articles/{article_id}", key, method="PUT", payload={"article": fields})
         operation = "Updated existing"
     else:
@@ -135,28 +148,32 @@ def publish(key: str, body: str) -> str:
     if not isinstance(response, dict):
         raise RuntimeError("DEV returned an unexpected article object")
 
-    # Re-read the authenticated account to independently verify publication.
-    # DEV responses can contain published_at but omit published entirely.
+    # Re-read the account and content. This confirms the actual post, tags,
+    # and updated Markdown without exposing DEVTO_API_KEY or making duplicates.
     verified = find_existing(key)
     if verified and _is_published(verified) and _has_challenge_tags(verified):
+        verified_id = verified.get("id")
+        if not isinstance(verified_id, int):
+            raise RuntimeError("Published DEV entry has no integer ID")
         link = _published_url(verified)
-        print(f"{operation} and verified published DEV challenge article: {link}")
+        if _get_remote_body(key, verified_id) != body.strip():
+            raise RuntimeError(
+                f"DEV article is published but body does not match submitted Markdown: {link}"
+            )
+        print(f"{operation} and verified published DEV challenge article with matching body: {link}")
         return link
 
-    if _is_published(response) and _has_challenge_tags(response):
-        link = _published_url(response)
-        print(f"{operation} and verified published DEV challenge article: {link}")
-        return link
-
-    article_id = response.get("id", existing.get("id") if existing else None)
-    has_pubdate = bool(response.get("published_at"))
+    returned_id = response.get("id", article_id)
     returned_tags = sorted(_article_tags(response))
     print(
-        f"DEV returned article ID={article_id}, published_at_present={has_pubdate}, "
-        f"tags={returned_tags}. No duplicate will be created on a later run.",
+        f"DEV returned article ID={returned_id}; tags={returned_tags}. "
+        "No duplicate will be created on a later run.",
         file=sys.stderr,
     )
-    raise RuntimeError("Article exists on DEV but publication and required challenge tags are not confirmed; check https://dev.to/dashboard")
+    raise RuntimeError(
+        "Article exists on DEV but publication/tags could not be confirmed; "
+        "check https://dev.to/dashboard"
+    )
 
 
 def main() -> int:
