@@ -14,7 +14,7 @@ An operator often spends the start of a shift scrolling through nearly identical
 
 - **Offline first:** runs on your computer; no API keys, cloud backends, accounts, analytics or external scripts.
 - **Open-weight AI is central:** Ollama + local `gemma3:1b` generates a plain-language incident overview, hypotheses and recommended read-only checks.
-- **Evidence-linked (not fact-checked):** model-suggested hypotheses and checks must cite event IDs present in the supplied logs. This prevents fake IDs, **not** unsupported reasoning about a real ID; always read the cited excerpt.
+- **Evidence-linked, not fact-checked:** model-suggested hypotheses and checks cite existing IDs and pass conservative topic checks. This rejects some unsupported connections, but **does not prove semantic correctness**; review the cited excerpt.
 - **Safe by default:** does not run commands against servers, modify configuration, connect to Docker or execute any model-proposed action.
 - **Privacy-minded:** common passwords, access tokens, key strings, credentials in URLs, IPs and emails are redacted *before* calling the model. Redaction is best-effort: review your own logs before use.
 - **Three shareable reports:** Markdown, JSON and a self-contained HTML dashboard (no external CSS or JS).
@@ -72,9 +72,11 @@ The default scan examines a maximum of 8,000 lines and forwards only the top 12 
 - It does **not** replace monitoring, operational runbooks, security review or incident response processes.
 - It does **not** claim a measured productivity gain without a user study.
 
-## Automated real-model demo (after publishing)
+## Public, real-model browser demo
 
-The new repository also includes `.github/workflows/live-gemma.yml`. On the first push to `main`, GitHub Actions starts Ollama in a Docker container, downloads the actual `gemma3:1b` weights, calls QuietOps in `scan` mode, checks that every suggested evidence ID exists, and uploads the HTML/JSON/Markdown outputs as the `quietops-real-gemma-report` artifact. This is a **planned CI verification**, not proof that the model has run until the workflow succeeds. The model download requires access to the official Ollama registry.
+**[Open the QuietOps public report](https://infraopsx.github.io/quietops/)** — a static report produced by the [real Gemma workflow](https://github.com/infraopsx/quietops/actions/workflows/live-gemma.yml) on GitHub Actions. The workflow starts local Ollama, pulls actual `gemma3:1b` model weights, analyzes **synthetic** Docker log data, checks basic output invariants, and publishes the generated HTML/JSON/Markdown. It does **not** host a publicly callable model or accept visitors' logs.
+
+The report explicitly separates the **deterministic observed-log summary** from **Gemma-generated hypotheses and read-only checks**. Evidence IDs are checked for existence and conservative topical relevance, **not** semantic entailment. AI guesses can still be wrong even when their citations are real; read the underlying redacted log excerpt before relying on them. The model's own unverified free-form overview is intentionally not displayed as a factual summary.
 
 ## Tests
 
