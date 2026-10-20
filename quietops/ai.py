@@ -157,6 +157,7 @@ def _system_message() -> str:
         "a query timeout does not imply insufficient permissions, and a logged URL does not prove it is invalid. "
         "Do not invent events, status, uptime, root causes, or proof of a repair. Label causal claims as hypotheses. "
         "Phrase unknowns only as open questions or explicit limitations; never as positive diagnoses. "
+        "Never ask the operator to retrieve plaintext passwords or secrets from logs. "
         "Make next checks READ ONLY: no sudo modifications, restart, delete, chmod, kubectl apply, or shell pipelines. "
         "If evidence is weak, say so. Do not suggest exporting logs to any cloud service. "
         "Use concise, useful English."
