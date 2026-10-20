@@ -59,6 +59,16 @@ class TestGrouping(unittest.TestCase):
         self.assertEqual(len(digest.events), 3)
         self.assertTrue(all(e.id.startswith("E") for e in digest.events))
 
+    def test_explicit_warning_is_not_upgraded_by_timeout(self):
+        digest = analyze(
+            "worker | 2026-10-20T01:01:45Z WARNING retrying queue after timeout\n"
+            "api | 2026-10-20T01:01:46Z ERROR retrying request after timeout"
+        )
+        self.assertEqual(len(digest.events), 2)
+        severities = {e.samples[0].split(" | ")[0]: e.severity for e in digest.events}
+        self.assertEqual(severities["worker"], "warning")
+        self.assertEqual(severities["api"], "error")
+
     def test_no_symptoms(self):
         digest = analyze("INFO service started\nINFO health check passed")
         self.assertEqual(digest.events, ())
@@ -88,6 +98,29 @@ class TestModelContract(unittest.TestCase):
         self.assertEqual(len(result.hypotheses), 1)
         self.assertEqual(result.hypotheses[0].event_ids, ("E01",))
         self.assertNotIn("Invented", make_markdown(self.digest, result))
+
+    def test_unsupported_fact_in_unknowns_is_discarded(self):
+        result = validate_brief({
+            "overview": "Upstream connection refused.",
+            "hypotheses": [],
+            "next_checks": [],
+            "unknowns": [
+                "Database server is running, but the URL is not configured correctly.",
+                "Whether the database is reachable from the application is unknown.",
+            ],
+        }, self.digest, "gemma3:1b")
+        self.assertEqual(result.unknowns, (
+            "Whether the database is reachable from the application is unknown.",
+        ))
+
+    def test_unknowns_have_safe_fallback(self):
+        result = validate_brief({
+            "overview": "Upstream connection refused.",
+            "hypotheses": [],
+            "next_checks": [],
+            "unknowns": ["Database server is running."],
+        }, self.digest, "gemma3:1b")
+        self.assertIn("not established", result.unknowns[0])
 
     def test_bad_response_rejected(self):
         with self.assertRaises(ModelError):

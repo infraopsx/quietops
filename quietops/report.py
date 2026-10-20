@@ -105,6 +105,7 @@ def make_html(digest: Digest, brief: Brief | None) -> str:
     ai_panel = (
         '<section class="card"><div class="section-heading"><h2>Local AI handoff</h2><span class="tiny">'
         + escape(brief.model_name) + '</span></div><p class="lead">' + intro + '</p>'
+        + '<p class="tiny">Cited event IDs are validated for existence, not semantic correctness. Check the underlying excerpts before relying on a hypothesis.</p>'
         + '<div class="columns"><div><h3>Possible explanations</h3>' + _notes_html(brief.hypotheses) + '</div>'
         + '<div><h3>Safe next checks</h3>' + _notes_html(brief.next_checks) + '</div></div>'
         + '<h3>What the logs cannot tell us</h3><ul>'
