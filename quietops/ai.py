@@ -5,11 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 import ipaddress
 import json
+import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener, ProxyHandler
 
-from .cluster import Digest
+from .cluster import Digest, Event
 
 
 class ModelError(RuntimeError):
@@ -52,10 +53,52 @@ def _safe_text(obj: object, *, limit: int) -> str:
     return str(obj).replace("\x00", " ").strip()[:limit] if isinstance(obj, str) else ""
 
 
+def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
+    """Conservative topical filter, NOT a proof of semantic entailment.
+
+    Drop common wrong-service citations and unsupported credential diagnoses.
+    Remaining model prose is still an unverified hypothesis or suggested check.
+    """
+    if not events:
+        return False
+    claim = text.lower()
+    evidence = " ".join(sample for event in events for sample in event.samples).lower()
+    topic_rules = (
+        (r"\\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\\b",
+         r"\\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\\b"),
+        (r"\\b(queue|worker|background job)\\b",
+         r"\\b(queue|worker|background job)\\b"),
+        (r"\\b(nginx|reverse proxy|upstream)\\b",
+         r"\\b(nginx|reverse proxy|upstream)\\b"),
+    )
+    for claim_pattern, evidence_pattern in topic_rules:
+        if re.search(claim_pattern, claim) and not re.search(evidence_pattern, evidence):
+            return False
+
+    if re.search(r"\\b(credentials?|authentication|permissions?|password|privileges?|login)\\b", claim):
+        # A password= field in a query-timeout log is NOT proof of an auth issue.
+        if not re.search(
+            r"\\b(authentication failed|login failed|permission denied|"
+            r"access denied|invalid credentials|wrong password|password rejected|"
+            r"unauthorized|forbidden)\\b", evidence
+        ):
+            return False
+        # Never encourage examining actual passwords in log files.
+        if re.search(r"\\b(logs?|traces?)\\b", claim) and re.search(r"\\b(password|credentials?)\\b", claim):
+            return False
+
+    if (re.search(r"\\b(url|uri|dsn|connection string)\\b", claim)
+            and re.search(r"\\b(invalid|incorrect|wrong|malformed|misconfigured)\\b", claim)
+            and not re.search(r"\\b(invalid|incorrect|wrong|malformed|misconfigured|parse error)\\b", evidence)):
+        return False
+    return True
+
+
 def validate_brief(candidate: object, digest: Digest, model_name: str) -> Brief:
     if not isinstance(candidate, dict):
         raise ModelError("Model output is not a JSON object")
-    valid = {event.id for event in digest.events}
+    by_id = {event.id: event for event in digest.events}
+    valid = set(by_id)
     overview = _safe_text(candidate.get("overview"), limit=700)
     if not overview:
         raise ModelError("Model output missing overview")
@@ -74,7 +117,7 @@ def validate_brief(candidate: object, digest: Digest, model_name: str) -> Brief:
                 continue
             evidence = tuple(dict.fromkeys(i for i in ids if isinstance(i, str) and i in valid))
             # Existence of an ID is checked, NOT whether the citation supports the claim.
-            if text and evidence:
+            if text and evidence and _plausibly_supported(text, tuple(by_id[i] for i in evidence)):
                 result.append(Note(text=text, event_ids=evidence))
         return tuple(result)
 
