@@ -74,10 +74,15 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
             evidence,
         ):
             return False
-    # Credential failures and refused upstream connections do not prove DB network faults.
-    if re.search(r"\b(network connectivity|network issue|network failure|routing issue)\b", claim):
-        if not re.search(r"\b(no route|network unreachable|network is unreachable|"
-                         r"host unreachable|dns failure|network timeout)\b", evidence):
+    # Network/firewall/DNS suggestions need actual transport-level symptoms
+    # in their *own* cited group; an unrelated queue timeout is not enough.
+    if re.search(r"\b(network|firewall|dns|routing|route|packet loss|tcp|udp)\b", claim):
+        if not re.search(
+            r"\b(no route|network unreachable|network is unreachable|"
+            r"host unreachable|dns failure|firewall|network timeout|"
+            r"connection refused|connect\(\) failed|packet loss|tcp error)\b",
+            evidence,
+        ):
             return False
     topic_rules = (
         (r"\b(database|postgres(?:ql)?|mysql|mariadb|sql|db server)\b",
