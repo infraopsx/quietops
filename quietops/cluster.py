@@ -22,7 +22,7 @@ _SPACE = re.compile(r"\s+")
 _ERROR = re.compile(r"(?i)\b(?:error|exception|failed|failure|fatal|panic|critical|timeout|timed out|refused|unhealthy|killed|oomkilled|crashloopbackoff|denied|502|503|504|back-off|no route to host)\b")
 _WARNING = re.compile(r"(?i)\b(?:warn(?:ing)?|retry(?:ing)?|degraded|slow|backoff|not ready)\b")
 _PREFIX = re.compile(r"^\s*([\w.-]{1,50})\s*\|\s*")
-_LEVEL = re.compile(r"(?i)\b(?:ERROR|WARN(?:ING)?|FATAL|CRITICAL|INFO|DEBUG)\b\s*[:\-]?\s*")
+_LEVEL = re.compile(r"(?i)\b(ERROR|WARN(?:ING)?|FATAL|CRITICAL|INFO|DEBUG)\b\s*[:\-]?\s*")
 
 
 @dataclass(frozen=True)
@@ -68,7 +68,15 @@ def analyze(raw: str, *, max_lines: int = 8000, max_events: int = 12) -> Digest:
         line = redact(_ANSI.sub("", original))
         if line != original:
             redacted_lines += 1
-        if _ERROR.search(line):
+        # Respect an explicit WARNING log level even when the message mentions
+        # "timeout" or "failed"; those words alone must not relabel it ERROR.
+        level_match = _LEVEL.search(line)
+        level = level_match.group(1).upper() if level_match else ""
+        if level in ("WARN", "WARNING"):
+            severity = "warning"
+        elif level in ("ERROR", "FATAL", "CRITICAL"):
+            severity = "error"
+        elif _ERROR.search(line):
             severity = "error"
         elif _WARNING.search(line):
             severity = "warning"
