@@ -92,7 +92,14 @@ That led to three concrete changes:
 
 These checks are intentionally modest. They **do not verify causal reasoning**. A note citing E05 for a suspected credential mismatch is a hypothesis worth checking, not a proven diagnosis. A model can still be wrong, even if every event ID exists.
 
-There is a further trade-off I haven't benchmarked yet: choosing the 12 most frequent signatures might omit a rare but critical failure. I would rather document that limitation than pretend a first-pass handoff is full incident analysis.
+**One rare-but-critical failure test changed the selection logic.** In a reproducible synthetic fixture containing 15 distinct, frequently repeated WARNING signatures and one single `FATAL database corruption detected` event, a pure top-12-by-frequency baseline **omitted the FATAL**. QuietOps now reserves one of the 12 slots for an observed FATAL/CRITICAL/PANIC/OOM/corruption signature when none would otherwise appear. The same test **retains the FATAL**. See the [benchmark regression test](https://github.com/infraopsx/quietops/blob/main/tests/test_rare_critical.py) and [passing CI](https://github.com/infraopsx/quietops/actions/runs/39532579838).
+
+| Synthetic case (16 distinct signatures) | Rare FATAL included in 12 shown? |
+|---|---|
+| Frequency-only baseline | No |
+| QuietOps with critical-signal reservation | Yes |
+
+This comparison measures **deterministic event selection only**, not Gemma diagnosis accuracy, precision/recall over production incidents, or human time saved. One slot is reserved, not every rare failure; the tool remains a first-pass handoff rather than full incident analysis.
 
 ## Why Does Open Innovation Matter?
 
