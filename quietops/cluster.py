@@ -102,7 +102,7 @@ def analyze(raw: str, *, max_lines: int = 8000, max_events: int = 12) -> Digest:
     # many high-frequency warnings consume the event budget. This is a
     # deterministic selection heuristic, not an AI correctness guarantee.
     critical = [item for item in ranked if re.search(
-        r"(?i)\\b(?:fatal|critical|panic|oomkilled|out of memory|corrupt(?:ion|ed)?)\\b",
+        r"(?i)\b(?:fatal|critical|panic|oomkilled|out of memory|corrupt(?:ion|ed)?)\b",
         item[0],
     )]
     chosen = ranked[:max_events]
