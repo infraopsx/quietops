@@ -98,7 +98,17 @@ def analyze(raw: str, *, max_lines: int = 8000, max_events: int = 12) -> Digest:
             item["samples"].append(line)
 
     ranked = sorted(grouped.items(), key=lambda kv: (-kv[1]["count"], kv[1]["first_line"]))
+    # Keep an observed FATAL/CRITICAL/PANIC/OOM symptom visible even when
+    # many high-frequency warnings consume the event budget. This is a
+    # deterministic selection heuristic, not an AI correctness guarantee.
+    critical = [item for item in ranked if re.search(
+        r"(?i)\\b(?:fatal|critical|panic|oomkilled|out of memory|corrupt(?:ion|ed)?)\\b",
+        item[0],
+    )]
     chosen = ranked[:max_events]
+    if critical and not any(item in chosen for item in critical):
+        chosen = chosen[:-1] + [critical[0]]
+    chosen = sorted(chosen, key=lambda kv: (-kv[1]["count"], kv[1]["first_line"]))
     events = tuple(
         Event(
             id=f"E{index:02d}",
