@@ -92,6 +92,8 @@ That led to three concrete changes:
 
 These checks are intentionally modest. They **do not verify causal reasoning**. A note citing E05 for a suspected credential mismatch is a hypothesis worth checking, not a proven diagnosis. A model can still be wrong, even if every event ID exists.
 
+As a separate read-only defense, the latest QuietOps version filters common **state-changing commands** from model-proposed next checks before producing the report. A [regression test](https://github.com/infraopsx/quietops/blob/main/tests/test_quietops.py) confirms that suggestions such as `systemctl restart` and `kubectl delete` are discarded while observational checks like `kubectl get pods` remain. This is a **limited lexical filter**, not proof that every possible suggestion is safe. QuietOps never executes any suggestion.
+
 **One rare-but-critical failure test changed the selection logic.** In a reproducible synthetic fixture containing 15 distinct, frequently repeated WARNING signatures and one single `FATAL database corruption detected` event, a pure top-12-by-frequency baseline **omitted the FATAL**. QuietOps now reserves one of the 12 slots for an observed FATAL/CRITICAL/PANIC/OOM/corruption signature when none would otherwise appear. The same test **retains the FATAL**. See the [benchmark regression test](https://github.com/infraopsx/quietops/blob/main/tests/test_rare_critical.py) and [passing CI](https://github.com/infraopsx/quietops/actions/runs/39532579838).
 
 | Synthetic case (16 distinct signatures) | Rare FATAL included in 12 shown? |
