@@ -15,7 +15,7 @@ An operator often spends the start of a shift scrolling through nearly identical
 - **Offline first:** runs on your computer; no API keys, cloud backends, accounts, analytics or external scripts.
 - **Open-weight AI is central:** Ollama + local `gemma3:1b` generates a plain-language incident overview, hypotheses and recommended read-only checks.
 - **Evidence-linked, not fact-checked:** model-suggested hypotheses and checks cite existing IDs and pass conservative topic checks. This rejects some unsupported connections, but **does not prove semantic correctness**; review the cited excerpt.
-- **Safe by default:** does not run commands against servers, modify configuration, connect to Docker or execute any model-proposed action.
+- **Safe by default:** does not run commands against servers, modify configuration, connect to Docker or execute any model-proposed action. Common mutating commands in AI-suggested *next checks* are also rejected by a narrow, deterministic pattern filter; this is not a complete safety guarantee.
 - **Privacy-minded:** common passwords, access tokens, key strings, credentials in URLs, IPs and emails are redacted *before* calling the model. Redaction is best-effort: review your own logs before use.
 - **Three shareable reports:** Markdown, JSON and a self-contained HTML dashboard (no external CSS or JS).
 - **Tiny dependency footprint:** Python standard library only; no Python package dependencies.

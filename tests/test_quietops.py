@@ -200,6 +200,44 @@ class TestModelContract(unittest.TestCase):
         self.assertEqual([note.text for note in result.next_checks],
                          ["Check the background queue retry rate."])
 
+    def test_ai_next_checks_reject_mutating_commands(self):
+        digest = analyze("nginx | ERROR upstream connection refused")
+        unsafe = [
+            "Run sudo systemctl restart nginx to fix the upstream.",
+            "Run kubectl delete pod nginx.",
+            "Restart nginx to clear the upstream error.",
+            "Apply infrastructure changes with terraform apply.",
+        ]
+        brief = validate_brief({
+            "overview": "An upstream error was logged.",
+            "hypotheses": [],
+            "next_checks": [
+                *[{"text": text, "event_ids": ["E01"]} for text in unsafe],
+                {"text": "Review nginx upstream errors with kubectl get pods.", "event_ids": ["E01"]},
+            ],
+            "unknowns": [],
+        }, digest, "gemma3:1b")
+        self.assertEqual([note.text for note in brief.next_checks],
+                         ["Review nginx upstream errors with kubectl get pods."])
+        report = make_markdown(digest, brief)
+        for command in unsafe:
+            self.assertNotIn(command, report)
+
+    def test_ai_check_filter_keeps_read_only_observation(self):
+        digest = analyze("postgres | FATAL password authentication failed for user app")
+        brief = validate_brief({
+            "overview": "Authentication failed.",
+            "hypotheses": [],
+            "next_checks": [
+                {"text": "Run docker compose down to clear the error.", "event_ids": ["E01"]},
+                {"text": "DROP TABLE app_users to reset state.", "event_ids": ["E01"]},
+                {"text": "Review the count of postgres authentication failures.", "event_ids": ["E01"]},
+            ],
+            "unknowns": [],
+        }, digest, "gemma3:1b")
+        self.assertEqual([note.text for note in brief.next_checks],
+                         ["Review the count of postgres authentication failures."])
+
     def test_bad_response_rejected(self):
         with self.assertRaises(ModelError):
             validate_brief(["not an object"], self.digest, "gemma3:1b")

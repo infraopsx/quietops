@@ -115,6 +115,29 @@ def _plausibly_supported(text: str, events: tuple[Event, ...]) -> bool:
     return True
 
 
+# A small, conservative backstop for model-generated "read-only" checks.
+# This blocks common state-changing instructions even if the model ignores
+# the system prompt. It is NOT a shell parser or a complete safety policy.
+_MUTATING_CHECK = re.compile(
+    r"(?i)(?:"
+    r"\b(?:sudo\s+)?(?:"
+    r"rm\s+-[^\s]*r|"
+    r"kubectl\s+(?:apply|delete|edit|patch|replace|scale|rollout\s+(?:restart|undo))|"
+    r"docker\s+(?:stop|restart|rm|kill|exec|compose\s+(?:up|down|restart|stop|rm))|"
+    r"systemctl\s+(?:start|stop|restart|reload|enable|disable)|"
+    r"service\s+\S+\s+(?:start|stop|restart)|"
+    r"helm\s+(?:install|upgrade|rollback|uninstall)|"
+    r"terraform\s+(?:apply|destroy)|"
+    r"chmod\s+|chown\s+|mkfs(?:\.\w+)?\s+|shutdown\b|reboot\b|kill(?:all)?\s+"
+    r")"
+    r"|\b(?:drop|alter|truncate)\s+(?:table|database)\b"
+    r"|\b(?:delete\s+from|update\s+[A-Za-z_]\w*\s+set)\b"
+    r"|\bcurl\s+[^\n;]*-X\s+(?:POST|PUT|PATCH|DELETE)\b"
+    r"|(?:^|[.;]\s*)(?:please\s+)?(?:restart|delete|remove|apply|edit|modify|change|stop|disable|reset)\s+\S+"
+    r")"
+)
+
+
 def _observed_overview(digest: Digest) -> str:
     """Only deterministic, directly observable facts belong in the lead summary."""
     services: set[str] = set()
@@ -162,6 +185,10 @@ def validate_brief(candidate: object, digest: Digest, model_name: str) -> Brief:
             # Existence of an ID is checked, NOT whether the citation supports the claim.
             # Every cited ID must independently be relevant. Mixing two unrelated
             # services is not evidence for a claimed shared cause.
+            # A citation is never permission to suggest changes to the system.
+            # Filter common mutating commands from the read-only section only.
+            if key == "next_checks" and _MUTATING_CHECK.search(text):
+                continue
             if text and evidence and all(_plausibly_supported(text, (by_id[i],)) for i in evidence):
                 result.append(Note(text=text, event_ids=evidence))
         return tuple(result)
