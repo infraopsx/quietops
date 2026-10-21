@@ -39,24 +39,24 @@ Five initial review items instead of 240 log lines is a **97.9% reduction in ite
 
 To run the deterministic grouping without any model:
 
-~~~bash
+```bash
 python3 examples/make_demo.py
 python3 -m quietops preview examples/docker-incident.log --output-dir out/
-~~~
+```
 
 To reproduce actual AI-assisted output locally after installing Ollama:
 
-~~~bash
+```bash
 ollama pull gemma3:1b
 # Make sure the local Ollama service is running.
 python3 -m quietops scan examples/docker-incident.log --model gemma3:1b --output-dir out/
-~~~
+```
 
 ## Code
 
 The project uses only Python's standard library, and keeps Ollama as a separately installed local inference server. The core is broken into small inspectable stages:
 
-~~~text
+```text
 input log
   → byte/line limits
   → best-effort secret redaction
@@ -68,7 +68,7 @@ input log
   → schema + conservative event-reference checks
   → deterministic factual overview + unverified Gemma suggestions
   → self-contained HTML + Markdown + JSON
-~~~
+```
 
 There is no signup, managed cloud database, background collector, hosted model or remote log upload. The network request is restricted to localhost, with HTTP proxies disabled for it. The parser checks the size before reading the entire file and does not process unbounded streams.
 
