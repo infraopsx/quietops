@@ -63,7 +63,7 @@ python3 -m quietops {scan|preview} INPUT [--output-dir DIR] [--max-lines N]
   --replace  Explicitly overwrite an existing report
 ```
 
-The default scan examines a maximum of 8,000 lines and forwards only the top 12 grouped signatures (up to 2 redacted excerpts each) to the local model. Lower-ranked events are counted but not sent. This is a first-pass briefing, **not complete forensic analysis**.
+The default scan examines a maximum of 8,000 lines and forwards at most 12 grouped signatures (up to 2 redacted excerpts each) to the local model. Selection primarily follows frequency, but reserves one slot for an observed FATAL/CRITICAL/PANIC/OOM/corruption signature if none of the frequency-ranked top 12 contains one. Other lower-ranked events are counted but not sent. A [synthetic regression case](tests/test_rare_critical.py) shows one rare FATAL that the frequency-only baseline omits but QuietOps retains; this is **not a measured Gemma accuracy improvement**. This remains a first-pass briefing, **not complete forensic analysis**.
 
 ## What it does *not* do
 
